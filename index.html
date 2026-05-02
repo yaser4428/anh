@@ -1,0 +1,958 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>MediAssist Hospital System</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap');
+  *{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --bg:#06080f;--bg2:#0b0f1c;--bg3:#101628;--bg4:#141c2e;
+    --border:#1e2d47;--border2:#2a3d5a;
+    --teal:#00d4aa;--teal2:#00a882;--teal-dim:#00d4aa18;
+    --blue:#4b9eff;--blue2:#2d7fd6;--blue-dim:#4b9eff18;
+    --rose:#ff6b8a;--rose2:#d64d6d;--rose-dim:#ff6b8a18;
+    --gold:#f5a623;--gold-dim:#f5a62318;
+    --purple:#a78bfa;--purple-dim:#a78bfa18;
+    --text:#e2eaf5;--text2:#8ba3c0;--text3:#4d6a89;
+    --radius:12px;--radius2:8px;
+  }
+  body{font-family:'Syne',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+  .mono{font-family:'DM Mono',monospace}
+
+  /* NAV */
+  .nav{display:flex;align-items:center;gap:0;background:var(--bg2);border-bottom:1px solid var(--border);padding:0 24px;height:56px;position:sticky;top:0;z-index:100}
+  .nav-logo{display:flex;align-items:center;gap:10px;margin-right:32px}
+  .nav-logo .icon{width:32px;height:32px;border-radius:9px;background:linear-gradient(135deg,var(--teal),var(--blue));display:flex;align-items:center;justify-content:center;font-size:16px}
+  .nav-logo .name{font-weight:800;font-size:15px;letter-spacing:-0.3px}
+  .nav-logo .sub{font-size:10px;color:var(--text3);font-weight:500}
+  .nav-tabs{display:flex;gap:2px;flex:1}
+  .nav-tab{padding:6px 14px;border-radius:7px;cursor:pointer;font-size:12px;font-weight:600;color:var(--text3);border:none;background:none;transition:all .2s;letter-spacing:.02em}
+  .nav-tab:hover{color:var(--text2);background:var(--bg3)}
+  .nav-tab.active{color:var(--teal);background:var(--teal-dim)}
+  .nav-right{display:flex;align-items:center;gap:8px;margin-left:auto}
+  .badge{font-size:10px;padding:3px 8px;border-radius:20px;font-weight:700;font-family:'DM Mono',monospace}
+  .badge-teal{background:var(--teal-dim);color:var(--teal);border:1px solid rgba(0,212,170,.2)}
+  .badge-blue{background:var(--blue-dim);color:var(--blue);border:1px solid rgba(75,158,255,.2)}
+  .badge-rose{background:var(--rose-dim);color:var(--rose);border:1px solid rgba(255,107,138,.2)}
+  .badge-gold{background:var(--gold-dim);color:var(--gold);border:1px solid rgba(245,166,35,.2)}
+
+  /* PAGES */
+  .page{display:none;padding:24px;max-width:1200px;margin:0 auto}
+  .page.active{display:block}
+
+  /* CARDS */
+  .card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:20px}
+  .card-sm{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius2);padding:14px 16px}
+
+  /* DEPT CARDS */
+  .dept-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:24px}
+  .dept-card{background:var(--bg2);border:2px solid var(--border);border-radius:14px;padding:22px;cursor:pointer;transition:all .25s;position:relative;overflow:hidden}
+  .dept-card:hover{transform:translateY(-2px)}
+  .dept-card.teal{border-color:rgba(0,212,170,.3)}
+  .dept-card.teal:hover,.dept-card.teal.selected{border-color:var(--teal);background:var(--teal-dim)}
+  .dept-card.blue{border-color:rgba(75,158,255,.3)}
+  .dept-card.blue:hover,.dept-card.blue.selected{border-color:var(--blue);background:var(--blue-dim)}
+  .dept-card.rose{border-color:rgba(255,107,138,.3)}
+  .dept-card.rose:hover,.dept-card.rose.selected{border-color:var(--rose);background:var(--rose-dim)}
+  .dept-icon{font-size:32px;margin-bottom:12px}
+  .dept-name{font-size:16px;font-weight:800;letter-spacing:-.3px;margin-bottom:4px}
+  .dept-doctor{font-size:12px;color:var(--text2);margin-bottom:2px}
+  .dept-qual{font-size:11px;color:var(--text3);font-family:'DM Mono',monospace;margin-bottom:14px}
+
+  /* SLOTS */
+  .slots-section{margin-top:10px}
+  .slots-label{font-size:10px;font-weight:700;color:var(--text3);letter-spacing:.1em;margin-bottom:8px}
+  .slots-row{display:flex;flex-wrap:wrap;gap:5px}
+  .slot{font-size:10px;padding:4px 8px;border-radius:6px;font-family:'DM Mono',monospace;font-weight:500;border:1px solid;cursor:pointer;transition:all .15s;user-select:none}
+  .slot.available{background:transparent;border-color:var(--border2);color:var(--text2)}
+  .teal .slot.available:hover{border-color:var(--teal);color:var(--teal)}
+  .blue .slot.available:hover{border-color:var(--blue);color:var(--blue)}
+  .rose .slot.available:hover{border-color:var(--rose);color:var(--rose)}
+  .slot.booked{background:var(--border);border-color:var(--border);color:var(--text3);cursor:not-allowed;text-decoration:line-through}
+  .slot.selected-slot{background:var(--teal);border-color:var(--teal);color:#000;font-weight:700}
+  .blue .slot.selected-slot{background:var(--blue);border-color:var(--blue);color:#000}
+  .rose .slot.selected-slot{background:var(--rose);border-color:var(--rose);color:#000}
+  .slot-count{font-size:10px;color:var(--text3);margin-top:6px;font-family:'DM Mono',monospace}
+
+  /* FORM */
+  .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .form-field{display:flex;flex-direction:column;gap:6px}
+  .form-field.full{grid-column:1/-1}
+  .form-field label{font-size:11px;font-weight:700;color:var(--text3);letter-spacing:.08em}
+  .form-field input,.form-field select,.form-field textarea{background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:10px 12px;color:var(--text);font-size:13px;font-family:'Syne',sans-serif;outline:none;transition:border-color .2s}
+  .form-field input:focus,.form-field select:focus,.form-field textarea:focus{border-color:var(--teal)}
+  .form-field select option{background:var(--bg3)}
+  .form-field textarea{resize:vertical;min-height:70px}
+
+  /* BUTTONS */
+  .btn{padding:10px 20px;border-radius:9px;border:none;cursor:pointer;font-size:13px;font-weight:700;font-family:'Syne',sans-serif;transition:all .2s;letter-spacing:.02em}
+  .btn-primary{background:var(--teal);color:#000}
+  .btn-primary:hover{background:var(--teal2)}
+  .btn-primary.blue-btn{background:var(--blue);color:#000}
+  .btn-primary.blue-btn:hover{background:var(--blue2)}
+  .btn-primary.rose-btn{background:var(--rose);color:#000}
+  .btn-primary.rose-btn:hover{background:var(--rose2)}
+  .btn-secondary{background:var(--bg3);color:var(--text2);border:1px solid var(--border2)}
+  .btn-secondary:hover{color:var(--text);border-color:var(--border2)}
+  .btn:disabled{opacity:.4;cursor:not-allowed}
+
+  /* CHAT */
+  .chat-wrap{display:flex;gap:16px;height:calc(100vh - 120px)}
+  .chat-main{flex:1;display:flex;flex-direction:column;min-width:0}
+  .chat-messages{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:14px;padding-bottom:10px}
+  .msg{display:flex;gap:10px;align-items:flex-start}
+  .msg.user{flex-direction:row-reverse}
+  .msg-avatar{width:30px;height:30px;border-radius:9px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:14px;background:linear-gradient(135deg,var(--teal),var(--blue))}
+  .msg.user .msg-avatar{background:linear-gradient(135deg,var(--blue),var(--purple))}
+  .msg-bubble{max-width:75%;padding:12px 15px;border-radius:14px;font-size:13px;line-height:1.65}
+  .msg.assistant .msg-bubble{background:var(--bg3);border:1px solid var(--border);border-radius:4px 14px 14px 14px;color:var(--text)}
+  .msg.user .msg-bubble{background:linear-gradient(135deg,#1a3e7a,#1a2d5a);border:1px solid #2a4d8a;border-radius:14px 4px 14px 14px;color:#c5d8f5}
+  .chat-input-row{display:flex;gap:8px;padding-top:12px;border-top:1px solid var(--border)}
+  .chat-input{flex:1;background:var(--bg3);border:1px solid var(--border2);border-radius:10px;padding:10px 14px;color:var(--text);font-size:13px;font-family:'Syne',sans-serif;outline:none;resize:none;min-height:42px;max-height:100px}
+  .chat-input:focus{border-color:var(--teal)}
+  .send-btn{width:42px;height:42px;border-radius:10px;border:none;cursor:pointer;background:linear-gradient(135deg,var(--teal),var(--blue));color:#000;font-size:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .2s}
+  .send-btn:disabled{background:var(--bg3);color:var(--text3);cursor:not-allowed}
+  .typing-dot{width:6px;height:6px;border-radius:50%;background:var(--blue);display:inline-block;animation:tdot 1.2s ease-in-out infinite}
+
+  /* PANEL */
+  .side-panel{width:260px;flex-shrink:0;display:flex;flex-direction:column;gap:12px;overflow-y:auto}
+  .panel-section{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:14px}
+  .panel-title{font-size:10px;font-weight:700;color:var(--text3);letter-spacing:.12em;margin-bottom:10px}
+
+  /* TABLE */
+  .data-table{width:100%;border-collapse:collapse}
+  .data-table th{font-size:10px;font-weight:700;color:var(--text3);letter-spacing:.1em;padding:8px 12px;border-bottom:1px solid var(--border);text-align:left}
+  .data-table td{font-size:12px;padding:10px 12px;border-bottom:1px solid var(--border);color:var(--text2);vertical-align:middle}
+  .data-table tr:last-child td{border-bottom:none}
+  .data-table tr:hover td{background:var(--bg3)}
+
+  /* LOGIN */
+  .login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+  .login-card{background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:36px;width:100%;max-width:400px}
+  .login-logo{display:flex;align-items:center;gap:10px;margin-bottom:28px}
+  .login-logo .icon{width:40px;height:40px;border-radius:11px;background:linear-gradient(135deg,var(--teal),var(--blue));display:flex;align-items:center;justify-content:center;font-size:20px}
+
+  /* STATS GRID */
+  .stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+  .stat-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:18px}
+  .stat-num{font-size:28px;font-weight:800;letter-spacing:-1px}
+  .stat-label{font-size:11px;color:var(--text3);font-weight:600;margin-top:4px;letter-spacing:.05em}
+
+  /* NOTIFICATION */
+  .notif{position:fixed;bottom:20px;right:20px;background:var(--bg2);border:1px solid rgba(0,212,170,.3);border-radius:12px;padding:14px 18px;font-size:13px;color:var(--teal);z-index:999;transform:translateY(100px);opacity:0;transition:all .3s;max-width:300px}
+  .notif.show{transform:translateY(0);opacity:1}
+
+  /* SECTION HEADER */
+  .section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+  .section-title{font-size:20px;font-weight:800;letter-spacing:-.5px}
+  .section-sub{font-size:12px;color:var(--text3);margin-top:2px}
+
+  /* LOGIN STATE */
+  #login-page{display:block}
+  #app-shell{display:none}
+
+  @keyframes tdot{0%,80%,100%{opacity:.3;transform:scale(.8)}40%{opacity:1;transform:scale(1)}}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+  .msg{animation:fadeIn .25s ease}
+
+  /* SCROLL */
+  ::-webkit-scrollbar{width:4px}
+  ::-webkit-scrollbar-track{background:transparent}
+  ::-webkit-scrollbar-thumb{background:var(--border2);border-radius:4px}
+  textarea::placeholder,input::placeholder{color:var(--text3)}
+  select{-webkit-appearance:none;appearance:none}
+
+  /* Quick prompt chips */
+  .qchips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+  .qchip{font-size:11px;padding:5px 11px;border-radius:20px;background:var(--bg3);border:1px solid var(--border2);color:var(--text2);cursor:pointer;font-family:'Syne',sans-serif;transition:all .15s}
+  .qchip:hover{border-color:var(--teal);color:var(--teal)}
+
+  /* Avail bar */
+  .avail-bar{height:4px;border-radius:2px;background:var(--border);margin-top:8px;overflow:hidden}
+  .avail-fill{height:100%;border-radius:2px;transition:width .5s}
+
+  .pill{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:10px;font-weight:700;font-family:'DM Mono',monospace}
+  .pill-green{background:rgba(0,201,119,.13);color:#00c977;border:1px solid rgba(0,201,119,.2)}
+  .pill-red{background:rgba(255,75,75,.13);color:#ff6b6b;border:1px solid rgba(255,75,75,.2)}
+  .pill-gold{background:var(--gold-dim);color:var(--gold);border:1px solid rgba(245,166,35,.2)}
+
+  /* API KEY SETUP BANNER */
+  .api-banner{background:rgba(245,166,35,.08);border:1px solid rgba(245,166,35,.25);border-radius:10px;padding:12px 16px;margin-bottom:14px;display:flex;align-items:center;gap:10px;font-size:12px;color:var(--gold)}
+  .api-banner input{flex:1;background:var(--bg3);border:1px solid var(--border2);border-radius:7px;padding:7px 12px;color:var(--text);font-size:12px;font-family:'DM Mono',monospace;outline:none}
+  .api-banner input:focus{border-color:var(--gold)}
+  .api-banner button{padding:7px 14px;border-radius:7px;border:none;background:var(--gold);color:#000;font-size:11px;font-weight:700;cursor:pointer;font-family:'Syne',sans-serif;white-space:nowrap}
+</style>
+</head>
+<body>
+
+<!-- ===================== LOGIN PAGE ===================== -->
+<div id="login-page">
+  <div class="login-wrap">
+    <div class="login-card">
+      <div class="login-logo">
+        <div class="icon">🏥</div>
+        <div>
+          <div style="font-weight:800;font-size:18px;letter-spacing:-.4px">MediAssist</div>
+          <div style="font-size:11px;color:var(--text3)">Hospital Management System</div>
+        </div>
+      </div>
+      <div style="margin-bottom:8px;font-size:12px;color:var(--text3);font-weight:600;letter-spacing:.05em">SELECT YOUR ROLE</div>
+      <div style="display:flex;gap:8px;margin-bottom:10px">
+        <button class="btn" onclick="loginAs('patient')" style="flex:1;background:var(--teal-dim);border:1px solid rgba(0,212,170,.3);color:var(--teal)">🧑 Patient / Visitor</button>
+        <button class="btn" onclick="loginAs('admin')" style="flex:1;background:var(--blue-dim);border:1px solid rgba(75,158,255,.3);color:var(--blue)">📊 Admin</button>
+      </div>
+      <div style="display:flex;gap:8px;flex-direction:column">
+        <button class="btn" onclick="loginAs('dr-azad')" style="background:var(--bg3);border:1px solid var(--border2);color:var(--text2);font-size:12px;text-align:left;display:flex;align-items:center;gap:8px"><span>🔬</span><span><strong>Dr. Md Azad</strong> — Surgery (MS, Gen Surgery)</span></button>
+        <button class="btn" onclick="loginAs('dr-farha')" style="background:var(--bg3);border:1px solid var(--border2);color:var(--text2);font-size:12px;text-align:left;display:flex;align-items:center;gap:8px"><span>🌿</span><span><strong>Dr. Farha Azad</strong> — Dermatology (Cons. Dermatologist)</span></button>
+        <button class="btn" onclick="loginAs('dr-shahrukh')" style="background:var(--bg3);border:1px solid var(--border2);color:var(--text2);font-size:12px;text-align:left;display:flex;align-items:center;gap:8px"><span>🦴</span><span><strong>Dr. Shahrukh Azad</strong> — Orthopaedics (MS Ortho)</span></button>
+      </div>
+      <div style="font-size:11px;color:var(--text3);text-align:center;border-top:1px solid var(--border);padding-top:16px;margin-top:20px">Demo system — click any role to enter</div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== APP SHELL ===================== -->
+<div id="app-shell">
+  <nav class="nav">
+    <div class="nav-logo">
+      <div class="icon">🏥</div>
+      <div>
+        <div class="name">MediAssist</div>
+        <div class="sub" id="user-role-label">Patient Portal</div>
+      </div>
+    </div>
+    <div class="nav-tabs" id="nav-tabs"></div>
+    <div class="nav-right">
+      <span class="badge badge-teal mono">● LIVE</span>
+      <button class="btn" onclick="logout()" style="padding:5px 12px;font-size:11px;background:var(--bg3);border:1px solid var(--border2);color:var(--text3)">Logout</button>
+    </div>
+  </nav>
+
+  <!-- ===== BOOKING PAGE ===== -->
+  <div id="page-book" class="page active">
+    <div class="section-header">
+      <div>
+        <div class="section-title">Book Appointment</div>
+        <div class="section-sub">Select a department and available slot</div>
+      </div>
+      <div id="book-step-label" class="badge badge-teal">Step 1 of 3</div>
+    </div>
+
+    <!-- Step 1 -->
+    <div id="step1">
+      <div class="dept-grid" id="dept-grid"></div>
+      <div id="slot-selection" style="display:none">
+        <div style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:20px">
+          <div style="font-size:13px;font-weight:700;margin-bottom:14px;color:var(--text2)">Select Time Slot — <span id="sel-dept-name" style="color:var(--teal)"></span></div>
+          <div style="margin-bottom:16px">
+            <div class="slots-label">MORNING SESSION (10:00 AM – 2:00 PM)</div>
+            <div class="slots-row" id="slots-morning"></div>
+          </div>
+          <div>
+            <div class="slots-label" id="evening-label">EVENING SESSION</div>
+            <div class="slots-row" id="slots-evening"></div>
+          </div>
+          <div id="slot-info" class="slot-count" style="margin-top:10px"></div>
+        </div>
+        <button class="btn btn-primary" id="proceed-btn" disabled onclick="goStep2()">Proceed to Patient Details →</button>
+      </div>
+    </div>
+
+    <!-- Step 2 -->
+    <div id="step2" style="display:none">
+      <div style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:24px;max-width:600px">
+        <div style="font-size:14px;font-weight:700;margin-bottom:18px">Patient Information</div>
+        <div class="form-grid">
+          <div class="form-field"><label>FULL NAME *</label><input id="pt-name" placeholder="Enter full name"/></div>
+          <div class="form-field"><label>AGE *</label><input id="pt-age" type="number" placeholder="Age in years"/></div>
+          <div class="form-field"><label>GENDER *</label>
+            <select id="pt-gender"><option value="">Select</option><option>Male</option><option>Female</option><option>Other</option></select>
+          </div>
+          <div class="form-field"><label>CONTACT NUMBER *</label><input id="pt-phone" placeholder="+91 XXXXX XXXXX"/></div>
+          <div class="form-field full"><label>ADDRESS</label><input id="pt-address" placeholder="Full address"/></div>
+          <div class="form-field full"><label>CHIEF COMPLAINT / SYMPTOMS *</label><textarea id="pt-complaint" placeholder="Describe the main reason for visit..."></textarea></div>
+        </div>
+        <div style="display:flex;gap:10px;margin-top:16px">
+          <button class="btn btn-secondary" onclick="goStep1()">← Back</button>
+          <button class="btn btn-primary" id="confirm-btn" onclick="confirmBooking()">Confirm Appointment</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 3 -->
+    <div id="step3" style="display:none">
+      <div style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:28px;max-width:500px;text-align:center">
+        <div style="font-size:40px;margin-bottom:16px">✅</div>
+        <div style="font-size:20px;font-weight:800;margin-bottom:8px">Appointment Confirmed!</div>
+        <div id="confirm-summary" style="font-size:13px;color:var(--text2);line-height:1.8;margin-bottom:20px"></div>
+        <div id="appt-id-box" style="background:var(--bg3);border:1px solid var(--border2);border-radius:10px;padding:14px;margin-bottom:20px;font-family:'DM Mono',monospace;font-size:12px;color:var(--teal)"></div>
+        <button class="btn btn-primary" onclick="resetBooking()">Book Another Appointment</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== AI ASSISTANT PAGE ===== -->
+  <div id="page-chat" class="page">
+    <div style="display:flex;gap:16px;height:calc(100vh - 108px)">
+      <div style="flex:1;display:flex;flex-direction:column;min-width:0">
+        <!-- API Key Banner -->
+        <div class="api-banner" id="api-banner">
+          <span>🔑</span>
+          <input type="password" id="api-key-input" placeholder="Enter your Anthropic API key to enable AI chat..." />
+          <button onclick="saveApiKey()">Save Key</button>
+        </div>
+        <div class="chat-messages" id="chat-messages">
+          <div class="msg assistant">
+            <div class="msg-avatar">🤖</div>
+            <div class="msg-bubble">👋 Hello! I'm <strong>Rida</strong>, your hospital assistant.<br><br>I can help with OPD registration, medicine inventory, appointment bookings, and general queries.<br><br></div>
+          </div>
+        </div>
+        <div id="quick-chips" class="qchips">
+          <span class="qchip" onclick="chipSend(this)">Register OPD patient</span>
+          <span class="qchip" onclick="chipSend(this)">Add medicine to inventory</span>
+          <span class="qchip" onclick="chipSend(this)">Show today's appointments</span>
+          <span class="qchip" onclick="chipSend(this)">Book appointment for Surgery</span>
+        </div>
+        <div class="chat-input-row">
+          <textarea class="chat-input" id="chat-input" placeholder="Type a message... (Enter to send)" rows="1" onkeydown="chatKey(event)"></textarea>
+          <button class="send-btn" id="send-btn" onclick="sendChat()">➤</button>
+        </div>
+      </div>
+      <div class="side-panel">
+        <div class="panel-section">
+          <div class="panel-title">DEPARTMENTS</div>
+          <div id="chat-dept-list"></div>
+        </div>
+        <div class="panel-section">
+          <div class="panel-title">RECENT ACTIONS</div>
+          <div id="action-log"><div style="font-size:11px;color:var(--text3)">No actions yet</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== ADMIN DASHBOARD ===== -->
+  <div id="page-admin" class="page">
+    <div class="section-header">
+      <div>
+        <div class="section-title">Admin Dashboard</div>
+        <div class="section-sub">Real-time patient &amp; appointment tracker</div>
+      </div>
+      <button class="btn btn-secondary" style="font-size:11px" onclick="refreshAdmin()">↻ Refresh</button>
+    </div>
+    <div class="stats-grid" id="admin-stats"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px">
+      <div class="card">
+        <div class="panel-title" style="margin-bottom:12px">APPOINTMENTS BY DEPARTMENT</div>
+        <div id="dept-breakdown"></div>
+      </div>
+      <div class="card">
+        <div class="panel-title" style="margin-bottom:12px">SLOT AVAILABILITY TODAY</div>
+        <div id="slot-overview"></div>
+      </div>
+    </div>
+    <div class="card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+        <div class="panel-title" style="margin-bottom:0">ALL APPOINTMENTS</div>
+        <div style="display:flex;gap:8px">
+          <select id="filter-dept" onchange="renderAdminTable()" style="background:var(--bg3);border:1px solid var(--border2);border-radius:7px;padding:5px 10px;color:var(--text);font-size:11px;font-family:'Syne',sans-serif;outline:none">
+            <option value="">All Departments</option>
+            <option>Surgery</option><option>Dermatology</option><option>Orthopaedics</option>
+          </select>
+          <select id="filter-status" onchange="renderAdminTable()" style="background:var(--bg3);border:1px solid var(--border2);border-radius:7px;padding:5px 10px;color:var(--text);font-size:11px;font-family:'Syne',sans-serif;outline:none">
+            <option value="">All Status</option>
+            <option>Confirmed</option><option>Pending</option><option>Completed</option>
+          </select>
+        </div>
+      </div>
+      <div style="overflow-x:auto"><table class="data-table" id="admin-table"></table></div>
+    </div>
+  </div>
+
+  <!-- ===== DOCTOR PANEL ===== -->
+  <div id="page-doctor" class="page">
+    <div class="section-header">
+      <div>
+        <div class="section-title" id="doctor-page-title">Doctor Dashboard</div>
+        <div class="section-sub" id="doctor-page-sub">Your appointments for today</div>
+      </div>
+      <span class="badge badge-teal">On Duty</span>
+    </div>
+    <div class="stats-grid" id="doctor-stats" style="grid-template-columns:repeat(3,1fr)"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+      <div class="card">
+        <div class="panel-title" style="margin-bottom:12px">TODAY'S SLOT SCHEDULE</div>
+        <div id="doctor-schedule"></div>
+      </div>
+      <div class="card">
+        <div class="panel-title" style="margin-bottom:12px">PATIENT QUEUE</div>
+        <div id="doctor-queue"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- NOTIFICATION TOAST -->
+<div class="notif" id="notif"></div>
+
+<script>
+// ===================== DATA =====================
+const DOCTORS = {
+  surgery: {
+    name: 'Dr. Md Azad', qual: 'MS.General Surgery',
+    dept: 'Surgery', color: 'teal', icon: '🔬',
+    morning: {start:'10:00',end:'14:00'},
+    evening: {start:'18:00',end:'20:00'},
+    loginKey: 'dr-azad'
+  },
+  dermatology: {
+    name: 'Dr. Farha Azad', qual: 'Cons.Dermatologist',
+    dept: 'Dermatology', color: 'blue', icon: '🌿',
+    morning: {start:'10:00',end:'14:00'},
+    evening: {start:'17:00',end:'20:00'},
+    loginKey: 'dr-farha'
+  },
+  orthopaedics: {
+    name: 'Dr. Shahrukh Azad', qual: 'MS Orthopaedics',
+    dept: 'Orthopaedics', color: 'rose', icon: '🦴',
+    morning: {start:'10:00',end:'14:00'},
+    evening: {start:'18:00',end:'20:00'},
+    loginKey: 'dr-shahrukh'
+  }
+};
+
+const MAX_PER_SLOT = 15;
+const SLOT_MINS = 20;
+
+const SYSTEM_PROMPT = `You are MediAssist, an intelligent AI agent for a hospital management system.
+
+Hospital departments:
+1. Surgery — Dr. Md Azad (MS, General Surgery) — Morning: 10am–2pm, Evening: 6pm–8pm
+2. Dermatology — Dr. Farha Azad (Consultant Dermatologist) — Morning: 10am–2pm, Evening: 5pm–8pm
+3. Orthopaedics — Dr. Shahrukh Azad (MS Orthopaedics) — Morning: 10am–2pm, Evening: 6pm–8pm
+
+Slot duration: 20 minutes each. Maximum 15 patients per slot.
+
+You help with:
+1. Medicine Records – Add/search inventory. Fields: medicine name, quantity, dosage, expiry date, supplier.
+2. OPD Patient Registration – Fields: full name, age, gender, contact, address, symptoms.
+3. Appointment Booking – Fields: patient name, department/doctor, preferred slot, reason.
+
+Behavior:
+- Be warm, concise, and professional.
+- Ask for missing fields one or two at a time conversationally.
+- When all info collected, confirm and output:
+\`\`\`json
+{"action":"MEDICINE_RECORD"|"OPD_REGISTRATION"|"APPOINTMENT","data":{...fields}}
+\`\`\`
+- For search queries output:
+\`\`\`json
+{"action":"SEARCH","module":"...","query":"..."}
+\`\`\``;
+
+let state = {
+  currentUser: null,
+  currentRole: null,
+  appointments: [],
+  selectedDept: null,
+  selectedSlot: null,
+  chatHistory: [],
+  loading: false,
+  apiKey: localStorage.getItem('medi_api_key') || ''
+};
+
+// Load or seed appointments
+function loadAppts() {
+  const saved = localStorage.getItem('medi_appts_v2');
+  if (saved) {
+    state.appointments = JSON.parse(saved);
+  } else {
+    state.appointments = [
+      {id:'APT-1001',patient:'Riya Sharma',age:34,gender:'Female',phone:'9876543210',dept:'Surgery',doctor:'Dr. Md Azad',slot:'10:00 AM',complaint:'Appendix pain',status:'Confirmed',date:new Date().toDateString()},
+      {id:'APT-1002',patient:'Arjun Mehta',age:52,gender:'Male',phone:'9123456789',dept:'Dermatology',doctor:'Dr. Farha Azad',slot:'11:00 AM',complaint:'Skin rash',status:'Confirmed',date:new Date().toDateString()},
+      {id:'APT-1003',patient:'Priya Nair',age:28,gender:'Female',phone:'9988776655',dept:'Orthopaedics',doctor:'Dr. Shahrukh Azad',slot:'10:40 AM',complaint:'Knee pain',status:'Completed',date:new Date().toDateString()},
+      {id:'APT-1004',patient:'Suresh Rao',age:45,gender:'Male',phone:'9765432100',dept:'Surgery',doctor:'Dr. Md Azad',slot:'6:00 PM',complaint:'Hernia',status:'Pending',date:new Date().toDateString()},
+    ];
+    saveAppts();
+  }
+}
+
+function saveAppts() {
+  localStorage.setItem('medi_appts_v2', JSON.stringify(state.appointments));
+}
+
+// ===================== SLOT LOGIC =====================
+function generateSlots(session) {
+  const slots = [];
+  const [sh, sm] = session.start.split(':').map(Number);
+  const [eh, em] = session.end.split(':').map(Number);
+  let cur = sh*60+sm;
+  const end = eh*60+em;
+  while (cur + SLOT_MINS <= end) {
+    const hh = Math.floor(cur/60);
+    const mm = cur % 60;
+    const period = hh >= 12 ? 'PM' : 'AM';
+    const h12 = hh > 12 ? hh-12 : (hh === 0 ? 12 : hh);
+    slots.push(`${h12}:${mm.toString().padStart(2,'0')} ${period}`);
+    cur += SLOT_MINS;
+  }
+  return slots;
+}
+
+function getBookedCount(dept, slot) {
+  const today = new Date().toDateString();
+  return state.appointments.filter(a => a.dept === dept && a.slot === slot && a.date === today).length;
+}
+
+// ===================== AUTH =====================
+const NAV_CONFIG = {
+  patient: [{id:'page-book',label:'📅 Book Appointment'},{id:'page-chat',label:'🤖 AI Assistant'}],
+  admin: [{id:'page-admin',label:'📊 Dashboard'},{id:'page-book',label:'📅 New Booking'},{id:'page-chat',label:'🤖 AI Assistant'}],
+  'dr-azad': [{id:'page-doctor',label:'📋 My Schedule'},{id:'page-chat',label:'🤖 AI Assistant'}],
+  'dr-farha': [{id:'page-doctor',label:'📋 My Schedule'},{id:'page-chat',label:'🤖 AI Assistant'}],
+  'dr-shahrukh': [{id:'page-doctor',label:'📋 My Schedule'},{id:'page-chat',label:'🤖 AI Assistant'}]
+};
+const ROLE_LABELS = {
+  patient:'Patient Portal', admin:'Admin Dashboard',
+  'dr-azad':'Dr. Md Azad — Surgery',
+  'dr-farha':'Dr. Farha Azad — Dermatology',
+  'dr-shahrukh':'Dr. Shahrukh Azad — Orthopaedics'
+};
+
+function loginAs(role) {
+  state.currentRole = role;
+  document.getElementById('login-page').style.display = 'none';
+  document.getElementById('app-shell').style.display = 'block';
+  document.getElementById('user-role-label').textContent = ROLE_LABELS[role] || role;
+  const tabs = NAV_CONFIG[role] || NAV_CONFIG.patient;
+  document.getElementById('nav-tabs').innerHTML = tabs.map(t =>
+    `<button class="nav-tab" onclick="showPage('${t.id}')" id="ntab-${t.id}">${t.label}</button>`
+  ).join('');
+  document.querySelectorAll('.page').forEach(p => { p.style.display='none'; p.classList.remove('active'); });
+  const firstPage = role === 'admin' ? 'page-admin' : role.startsWith('dr-') ? 'page-doctor' : 'page-book';
+  showPage(firstPage);
+  renderDeptGrid();
+  renderChatDeptList();
+  checkApiKeyBanner();
+}
+
+function logout() {
+  document.getElementById('login-page').style.display = 'block';
+  document.getElementById('app-shell').style.display = 'none';
+  state.currentRole = null;
+}
+
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => { p.style.display='none'; p.classList.remove('active'); });
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  const page = document.getElementById(id);
+  if (page) { page.style.display='block'; page.classList.add('active'); }
+  const tab = document.getElementById(`ntab-${id}`);
+  if (tab) tab.classList.add('active');
+  if (id === 'page-admin') refreshAdmin();
+  if (id === 'page-doctor') renderDoctorPage();
+}
+
+// ===================== API KEY =====================
+function checkApiKeyBanner() {
+  const banner = document.getElementById('api-banner');
+  if (state.apiKey) { banner.style.display='none'; }
+  else { banner.style.display='flex'; }
+}
+
+function saveApiKey() {
+  const val = document.getElementById('api-key-input').value.trim();
+  if (!val) { showNotif('⚠️ Please enter a valid API key'); return; }
+  state.apiKey = val;
+  localStorage.setItem('medi_api_key', val);
+  document.getElementById('api-banner').style.display = 'none';
+  showNotif('✅ API key saved — AI chat is now enabled');
+  appendMsg('assistant', '✅ API key connected! I\'m now ready to help you. Ask me anything about appointments, medicine inventory, or patient registration.');
+}
+
+// ===================== DEPT GRID =====================
+function renderDeptGrid() {
+  const grid = document.getElementById('dept-grid');
+  if (!grid) return;
+  grid.innerHTML = Object.entries(DOCTORS).map(([key, doc]) => {
+    const mSlots = generateSlots(doc.morning);
+    const eSlots = generateSlots(doc.evening);
+    const allSlots = [...mSlots, ...eSlots];
+    const booked = allSlots.reduce((a,s) => a + getBookedCount(doc.dept, s), 0);
+    const total = allSlots.length * MAX_PER_SLOT;
+    const avail = total - booked;
+    const pct = Math.round((avail / total) * 100);
+    const availColor = pct > 50 ? '#00c977' : pct > 20 ? 'var(--gold)' : 'var(--rose)';
+    return `
+    <div class="dept-card ${doc.color}" onclick="selectDept('${key}')" id="dcard-${key}">
+      <div class="dept-icon">${doc.icon}</div>
+      <div class="dept-name">${doc.dept}</div>
+      <div class="dept-doctor">${doc.name}</div>
+      <div class="dept-qual">${doc.qual}</div>
+      <div style="display:flex;gap:6px;align-items:center;margin-bottom:8px">
+        <span class="pill" style="background:${availColor}20;color:${availColor};border:1px solid ${availColor}30">${avail} slots free</span>
+        <span style="font-size:10px;color:var(--text3);font-family:'DM Mono',monospace">${booked}/${total} booked</span>
+      </div>
+      <div class="avail-bar"><div class="avail-fill" style="width:${pct}%;background:${availColor}"></div></div>
+      <div class="slots-section">
+        <div class="slots-label" style="margin-top:10px">MORNING · ${doc.morning.start}–${doc.morning.end}</div>
+        <div class="slots-row">${mSlots.slice(0,6).map(s => slotMini(doc.dept, s)).join('')}${mSlots.length>6?`<span style="font-size:9px;color:var(--text3);padding:4px;align-self:center">+${mSlots.length-6} more</span>`:''}</div>
+        <div class="slots-label" style="margin-top:8px">EVENING · ${doc.evening.start}–${doc.evening.end}</div>
+        <div class="slots-row">${eSlots.map(s => slotMini(doc.dept, s)).join('')}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function slotMini(dept, slot) {
+  const cnt = getBookedCount(dept, slot);
+  const cls = cnt >= MAX_PER_SLOT ? 'booked' : 'available';
+  return `<span class="slot ${cls}" style="font-size:9px;padding:3px 6px">${slot}</span>`;
+}
+
+function selectDept(key) {
+  state.selectedDept = key;
+  state.selectedSlot = null;
+  document.querySelectorAll('.dept-card').forEach(c => c.classList.remove('selected'));
+  document.getElementById(`dcard-${key}`)?.classList.add('selected');
+  document.getElementById('slot-selection').style.display = 'block';
+  document.getElementById('book-step-label').textContent = 'Step 2 of 3';
+  renderSlotPicker(key);
+  document.getElementById('slot-selection').scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+function renderSlotPicker(key) {
+  const doc = DOCTORS[key];
+  document.getElementById('sel-dept-name').textContent = `${doc.dept} — ${doc.name}`;
+  document.getElementById('evening-label').textContent = `EVENING SESSION (${doc.evening.start}–${doc.evening.end})`;
+  renderSlotRow('slots-morning', doc.dept, generateSlots(doc.morning), doc.color);
+  renderSlotRow('slots-evening', doc.dept, generateSlots(doc.evening), doc.color);
+  updateSlotInfo();
+}
+
+function renderSlotRow(containerId, dept, slots, color) {
+  document.getElementById(containerId).innerHTML = slots.map(s => {
+    const cnt = getBookedCount(dept, s);
+    const full = cnt >= MAX_PER_SLOT;
+    return `<span class="slot ${full?'booked':'available'}" onclick="${full?'':` pickSlot('${s}', event)`}" title="${full?'Slot full':'Available · '+cnt+'/'+MAX_PER_SLOT+' booked'}">${s}</span>`;
+  }).join('');
+}
+
+function pickSlot(slot, e) {
+  state.selectedSlot = slot;
+  document.querySelectorAll('#slots-morning .slot, #slots-evening .slot').forEach(s => s.classList.remove('selected-slot'));
+  if (e && e.target) e.target.classList.add('selected-slot');
+  document.getElementById('proceed-btn').disabled = false;
+  updateSlotInfo();
+}
+
+function updateSlotInfo() {
+  if (!state.selectedDept || !state.selectedSlot) return;
+  const cnt = getBookedCount(DOCTORS[state.selectedDept].dept, state.selectedSlot);
+  document.getElementById('slot-info').textContent = `Selected: ${state.selectedSlot} · ${cnt}/${MAX_PER_SLOT} booked · ${MAX_PER_SLOT - cnt} remaining`;
+}
+
+function goStep2() {
+  document.getElementById('step1').style.display = 'none';
+  document.getElementById('step2').style.display = 'block';
+  document.getElementById('book-step-label').textContent = 'Step 3 of 3';
+  const doc = DOCTORS[state.selectedDept];
+  const btn = document.getElementById('confirm-btn');
+  btn.className = `btn btn-primary${doc.color==='blue'?' blue-btn':doc.color==='rose'?' rose-btn':''}`;
+}
+
+function goStep1() {
+  document.getElementById('step1').style.display = 'block';
+  document.getElementById('step2').style.display = 'none';
+  document.getElementById('book-step-label').textContent = 'Step 2 of 3';
+}
+
+function confirmBooking() {
+  const name = document.getElementById('pt-name').value.trim();
+  const age = document.getElementById('pt-age').value.trim();
+  const gender = document.getElementById('pt-gender').value;
+  const phone = document.getElementById('pt-phone').value.trim();
+  const complaint = document.getElementById('pt-complaint').value.trim();
+  if (!name||!age||!gender||!phone||!complaint) { showNotif('⚠️ Please fill all required fields'); return; }
+  const doc = DOCTORS[state.selectedDept];
+  const id = 'APT-' + (1000 + state.appointments.length + 1);
+  const appt = {id, patient:name, age:parseInt(age), gender, phone,
+    dept:doc.dept, doctor:doc.name, slot:state.selectedSlot,
+    complaint, status:'Confirmed', date:new Date().toDateString()};
+  state.appointments.push(appt);
+  saveAppts();
+  document.getElementById('step2').style.display = 'none';
+  document.getElementById('step3').style.display = 'block';
+  document.getElementById('book-step-label').textContent = '✅ Done';
+  document.getElementById('confirm-summary').innerHTML =
+    `<strong>${name}</strong>, ${age}y · ${gender}<br>📍 ${doc.dept} — ${doc.name}<br>🕐 ${state.selectedSlot} · ${new Date().toDateString()}<br>📋 ${complaint}`;
+  document.getElementById('appt-id-box').textContent = `Appointment ID: ${id}  |  Doctor: ${doc.name}`;
+  showNotif(`✅ Appointment confirmed! ${doc.name} has been notified.`);
+  renderDeptGrid();
+}
+
+function resetBooking() {
+  state.selectedDept = null; state.selectedSlot = null;
+  ['step2','step3'].forEach(s => document.getElementById(s).style.display='none');
+  document.getElementById('step1').style.display = 'block';
+  document.getElementById('slot-selection').style.display = 'none';
+  document.getElementById('book-step-label').textContent = 'Step 1 of 3';
+  ['pt-name','pt-age','pt-phone','pt-address','pt-complaint'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+  document.getElementById('pt-gender').value = '';
+  document.querySelectorAll('.dept-card').forEach(c => c.classList.remove('selected'));
+  renderDeptGrid();
+}
+
+// ===================== ADMIN DASHBOARD =====================
+function refreshAdmin() {
+  const today = new Date().toDateString();
+  const todayAppts = state.appointments.filter(a => a.date === today);
+  const stats = [
+    {label:'TOTAL TODAY', val:todayAppts.length, color:'var(--teal)'},
+    {label:'CONFIRMED', val:todayAppts.filter(a=>a.status==='Confirmed').length, color:'var(--blue)'},
+    {label:'COMPLETED', val:todayAppts.filter(a=>a.status==='Completed').length, color:'var(--gold)'},
+    {label:'PENDING', val:todayAppts.filter(a=>a.status==='Pending').length, color:'var(--rose)'},
+  ];
+  document.getElementById('admin-stats').innerHTML = stats.map(s =>
+    `<div class="stat-card"><div class="stat-num" style="color:${s.color}">${s.val}</div><div class="stat-label">${s.label}</div></div>`
+  ).join('');
+
+  const breakdown = {};
+  Object.values(DOCTORS).forEach(d => breakdown[d.dept]={confirmed:0,completed:0,pending:0,total:0});
+  todayAppts.forEach(a => { if(breakdown[a.dept]){ breakdown[a.dept][a.status.toLowerCase()]++; breakdown[a.dept].total++; }});
+  document.getElementById('dept-breakdown').innerHTML = Object.entries(breakdown).map(([dept,b]) => {
+    const doc = Object.values(DOCTORS).find(d=>d.dept===dept);
+    const cc = {teal:'var(--teal)',blue:'var(--blue)',rose:'var(--rose)'};
+    const c = cc[doc.color];
+    return `<div style="margin-bottom:14px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <span style="font-size:12px;font-weight:700;color:${c}">${dept}</span>
+        <span style="font-size:11px;color:var(--text3);font-family:'DM Mono',monospace">${b.total} appts</span>
+      </div>
+      <div style="display:flex;gap:5px;flex-wrap:wrap">
+        <span class="pill pill-green">${b.confirmed} confirmed</span>
+        <span class="pill pill-gold">${b.completed} done</span>
+        ${b.pending>0?`<span class="pill pill-red">${b.pending} pending</span>`:''}
+      </div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('slot-overview').innerHTML = Object.entries(DOCTORS).map(([key,doc]) => {
+    const allSlots = [...generateSlots(doc.morning),...generateSlots(doc.evening)];
+    const booked = allSlots.reduce((a,s)=>a+getBookedCount(doc.dept,s),0);
+    const total = allSlots.length * MAX_PER_SLOT;
+    const pct = Math.round((booked/total)*100);
+    const c = pct > 80 ? 'var(--rose)' : pct > 50 ? 'var(--gold)' : 'var(--teal)';
+    return `<div style="margin-bottom:14px">
+      <div style="display:flex;justify-content:space-between;margin-bottom:5px">
+        <span style="font-size:12px;font-weight:700">${doc.dept}</span>
+        <span style="font-size:11px;color:var(--text3);font-family:'DM Mono',monospace">${booked}/${total} (${pct}%)</span>
+      </div>
+      <div class="avail-bar" style="height:6px"><div class="avail-fill" style="width:${pct}%;background:${c}"></div></div>
+    </div>`;
+  }).join('');
+
+  renderAdminTable();
+}
+
+function renderAdminTable() {
+  const deptF = document.getElementById('filter-dept')?.value || '';
+  const statF = document.getElementById('filter-status')?.value || '';
+  let appts = [...state.appointments];
+  if (deptF) appts = appts.filter(a => a.dept === deptF);
+  if (statF) appts = appts.filter(a => a.status === statF);
+  const sc = {Confirmed:'var(--teal)',Completed:'var(--gold)',Pending:'var(--rose)'};
+  const cc = {Surgery:'var(--teal)',Dermatology:'var(--blue)',Orthopaedics:'var(--rose)'};
+  document.getElementById('admin-table').innerHTML = `
+    <thead><tr>
+      <th>ID</th><th>PATIENT</th><th>AGE/GENDER</th><th>DEPARTMENT</th><th>DOCTOR</th><th>SLOT</th><th>COMPLAINT</th><th>STATUS</th><th>UPDATE</th>
+    </tr></thead>
+    <tbody>${appts.map(a => `<tr>
+      <td class="mono" style="color:var(--text3);font-size:11px">${a.id}</td>
+      <td style="font-weight:600;color:var(--text)">${a.patient}</td>
+      <td style="color:var(--text2)">${a.age}y · ${a.gender}</td>
+      <td><span style="font-size:11px;font-weight:700;color:${cc[a.dept]||'var(--text2)'}">${a.dept}</span></td>
+      <td style="font-size:11px;color:var(--text2)">${a.doctor}</td>
+      <td class="mono" style="font-size:11px">${a.slot}</td>
+      <td style="font-size:11px;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${a.complaint}">${a.complaint}</td>
+      <td><span class="pill" style="background:${sc[a.status]||'var(--text3)'}20;color:${sc[a.status]||'var(--text3)'};border-color:${sc[a.status]||'var(--text3)'}30">${a.status}</span></td>
+      <td><select onchange="changeStatus('${a.id}',this.value)" style="background:var(--bg3);border:1px solid var(--border2);border-radius:6px;padding:3px 8px;color:var(--text2);font-size:10px;font-family:'Syne',sans-serif;outline:none">
+        <option value="">Update</option><option>Confirmed</option><option>Completed</option><option>Pending</option>
+      </select></td>
+    </tr>`).join('')}
+    ${appts.length===0?'<tr><td colspan="9" style="text-align:center;padding:24px;color:var(--text3)">No appointments found</td></tr>':''}
+    </tbody>`;
+}
+
+function changeStatus(id, status) {
+  if (!status) return;
+  const appt = state.appointments.find(a => a.id === id);
+  if (appt) { appt.status = status; saveAppts(); refreshAdmin(); showNotif(`✅ ${id} updated to ${status}`); }
+}
+
+// ===================== DOCTOR PAGE =====================
+function renderDoctorPage() {
+  const role = state.currentRole;
+  const docKey = role==='dr-azad'?'surgery':role==='dr-farha'?'dermatology':role==='dr-shahrukh'?'orthopaedics':null;
+  if (!docKey) return;
+  const doc = DOCTORS[docKey];
+  document.getElementById('doctor-page-title').textContent = `${doc.name} — ${doc.dept}`;
+  document.getElementById('doctor-page-sub').textContent = `${doc.qual} · Morning ${doc.morning.start}–${doc.morning.end}  ·  Evening ${doc.evening.start}–${doc.evening.end}`;
+  const today = new Date().toDateString();
+  const myAppts = state.appointments.filter(a => a.dept === doc.dept && a.date === today);
+  const stats = [
+    {label:"TODAY'S PATIENTS", val:myAppts.length, color:'var(--teal)'},
+    {label:'CONFIRMED', val:myAppts.filter(a=>a.status==='Confirmed').length, color:'var(--blue)'},
+    {label:'COMPLETED', val:myAppts.filter(a=>a.status==='Completed').length, color:'var(--gold)'},
+  ];
+  document.getElementById('doctor-stats').innerHTML = stats.map(s =>
+    `<div class="stat-card"><div class="stat-num" style="color:${s.color}">${s.val}</div><div class="stat-label">${s.label}</div></div>`
+  ).join('');
+
+  const allSlots = [...generateSlots(doc.morning),...generateSlots(doc.evening)];
+  document.getElementById('doctor-schedule').innerHTML = allSlots.map(slot => {
+    const cnt = getBookedCount(doc.dept, slot);
+    const pct = Math.round((cnt/MAX_PER_SLOT)*100);
+    const c = cnt>=MAX_PER_SLOT?'var(--rose)':cnt>8?'var(--gold)':'var(--teal)';
+    return `<div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--border)">
+      <span class="mono" style="font-size:11px;color:var(--text2);min-width:65px">${slot}</span>
+      <div style="flex:1"><div class="avail-bar"><div class="avail-fill" style="width:${pct}%;background:${c}"></div></div></div>
+      <span style="font-size:10px;color:${c};font-family:'DM Mono',monospace;min-width:36px;text-align:right">${cnt}/${MAX_PER_SLOT}</span>
+    </div>`;
+  }).join('');
+
+  document.getElementById('doctor-queue').innerHTML = myAppts.length ?
+    myAppts.map((a,i) => `
+      <div style="display:flex;align-items:flex-start;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)">
+        <div style="width:26px;height:26px;border-radius:50%;background:var(--teal-dim);border:1px solid rgba(0,212,170,.2);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--teal);flex-shrink:0">${i+1}</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:13px;font-weight:700">${a.patient} <span style="font-size:11px;color:var(--text3);font-weight:400">${a.age}y · ${a.gender}</span></div>
+          <div style="font-size:11px;color:var(--text2);margin-top:2px">${a.slot} · ${a.complaint}</div>
+          <div style="margin-top:3px"><span class="mono" style="font-size:10px;color:var(--text3)">${a.id}</span></div>
+        </div>
+        <select onchange="changeStatus('${a.id}',this.value)" style="background:var(--bg3);border:1px solid var(--border2);border-radius:6px;padding:4px 8px;color:var(--text2);font-size:10px;font-family:'Syne',sans-serif;outline:none;flex-shrink:0">
+          <option value="">Status</option><option>Confirmed</option><option>Completed</option><option>Pending</option>
+        </select>
+      </div>`) .join('') :
+    '<div style="color:var(--text3);font-size:12px;padding:20px 0;text-align:center">No patients scheduled today</div>';
+}
+
+// ===================== AI CHAT =====================
+function renderChatDeptList() {
+  const container = document.getElementById('chat-dept-list');
+  if (!container) return;
+  container.innerHTML = Object.entries(DOCTORS).map(([key,doc]) => {
+    const cc = {teal:'var(--teal)',blue:'var(--blue)',rose:'var(--rose)'};
+    const c = cc[doc.color];
+    const allSlots = [...generateSlots(doc.morning),...generateSlots(doc.evening)];
+    const booked = allSlots.reduce((a,s)=>a+getBookedCount(doc.dept,s),0);
+    const total = allSlots.length * MAX_PER_SLOT;
+    return `<div style="background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:10px 12px;margin-bottom:8px">
+      <div style="font-size:13px;font-weight:700;color:${c}">${doc.icon} ${doc.dept}</div>
+      <div style="font-size:11px;color:var(--text2);margin-top:2px">${doc.name}</div>
+      <div style="font-size:10px;color:var(--text3);font-family:'DM Mono',monospace;margin-top:4px">${booked}/${total} slots booked today</div>
+    </div>`;
+  }).join('');
+}
+
+let msgCount = 0;
+function appendMsg(role, html, isLoading=false) {
+  const id = 'msg-'+(++msgCount);
+  const el = document.createElement('div');
+  el.className = `msg ${role}`;
+  el.id = id;
+  el.innerHTML = `<div class="msg-avatar">${role==='user'?'👤':'🤖'}</div><div class="msg-bubble">${html.replace(/\n/g,'<br>')}</div>`;
+  document.getElementById('chat-messages').appendChild(el);
+  el.scrollIntoView({behavior:'smooth',block:'end'});
+  return id;
+}
+
+function removeMsg(id) {
+  const el = document.getElementById(id);
+  if (el) el.remove();
+}
+
+function chatKey(e) {
+  if (e.key==='Enter'&&!e.shiftKey) { e.preventDefault(); sendChat(); }
+}
+
+function chipSend(el) {
+  document.getElementById('chat-input').value = el.textContent;
+  sendChat();
+}
+
+async function sendChat() {
+  const input = document.getElementById('chat-input');
+  const text = input.value.trim();
+  if (!text || state.loading) return;
+  if (!state.apiKey) { showNotif('⚠️ Please enter your API key first'); return; }
+  input.value = '';
+  document.getElementById('quick-chips').style.display = 'none';
+  appendMsg('user', text);
+  state.chatHistory.push({role:'user', content:text});
+  state.loading = true;
+  document.getElementById('send-btn').disabled = true;
+  const loadingId = appendMsg('assistant',
+    '<span class="typing-dot" style="animation-delay:0s"></span><span class="typing-dot" style="animation-delay:.2s"></span><span class="typing-dot" style="animation-delay:.4s"></span>',true);
+  try {
+    const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${state.apiKey}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        model: 'openai/gpt-4o',
+        messages: state.chatHistory
+      })
+    });
+    const data = await res.json();
+    if (data.error) throw new Error(data.error.message);
+    const reply = (data.choices && data.choices.length > 0 && data.choices[0].message && data.choices[0].message.content) || 'Sorry, I could not process that.';
+    removeMsg(loadingId);
+    const clean = reply.replace(/```json[\s\S]*?```/g,'').trim();
+    appendMsg('assistant', clean);
+    state.chatHistory.push({role:'assistant', content:reply});
+    const parsed = parseAction(reply);
+    if (parsed) logAction(parsed);
+  } catch(e) {
+    removeMsg(loadingId);
+    appendMsg('assistant', `⚠️ Error: ${e.message || 'Connection failed. Check your API key.'}`);
+  }
+  state.loading = false;
+  document.getElementById('send-btn').disabled = false;
+}
+
+function parseAction(text) {
+  const m = text.match(/```json\s*([\s\S]*?)```/);
+  if (!m) return null;
+  try { return JSON.parse(m[1]); } catch { return null; }
+}
+
+function logAction(action) {
+  const colors = {MEDICINE_RECORD:'var(--teal)',OPD_REGISTRATION:'var(--blue)',APPOINTMENT:'var(--rose)',SEARCH:'var(--gold)'};
+  const c = colors[action.action] || 'var(--text3)';
+  const log = document.getElementById('action-log');
+  log.innerHTML = `<div style="padding:7px 0;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:7px">
+    <div style="width:5px;height:5px;border-radius:50%;background:${c};flex-shrink:0"></div>
+    <span style="font-size:11px;color:${c};font-weight:700">${action.action.replace('_',' ')}</span>
+    ${action.data?`<span style="font-size:10px;color:var(--text3)">${Object.values(action.data)[0]}</span>`:''}
+  </div>` + log.innerHTML;
+}
+
+// ===================== UTILS =====================
+function showNotif(msg) {
+  const n = document.getElementById('notif');
+  n.textContent = msg;
+  n.classList.add('show');
+  setTimeout(() => n.classList.remove('show'), 3500);
+}
+
+// ===================== INIT =====================
+loadAppts();
+setInterval(() => { if(state.currentRole) renderDeptGrid(); }, 30000);
+</script>
+</body>
+</html>
